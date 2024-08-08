@@ -1,4 +1,4 @@
-name: 'Lee Calendar Deploy Action'
+name: 'tudigong Deploy Action'
 description: 'Build and deploy Docker image to server'
 inputs:
   stage:
@@ -80,9 +80,6 @@ runs:
         script: |
           set -e
           set -x
-          docker stop ${{ inputs.project_name }} || true
-          docker rm ${{ inputs.project_name }} || true
-          docker rmi $(docker images --filter=reference='${{ inputs.project_name }}:*' -q) || true
           docker load -i ~/docker-image/${{ inputs.project_name }}-amd64.tar
           rm ~/docker-image/${{ inputs.project_name }}-amd64.tar
-          docker run -d --name ${{ inputs.project_name }} -p 8888:3000 ${{ inputs.project_name }}:${{ github.ref_name }}.amd64
+          docker image prune -f
