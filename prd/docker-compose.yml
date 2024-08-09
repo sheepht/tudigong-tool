@@ -1,0 +1,31 @@
+services:
+  web:
+    image: tudigong-web:main.amd64
+    env_file: .env.web
+    ports:
+      - "8888:3000"  # 主機的 8888 端口映射到容器的 3000 端口
+    volumes:
+      - /app/node_modules
+    environment:
+      - NODE_ENV=production
+
+  service:
+    image: tudigong-service:main.amd64
+    env_file: .env.service
+    volumes:
+      - .:/app
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+
+  db:
+    image: mysql:8.0
+    env_file: .env.service
+    volumes:
+      - mysql_data:/var/lib/mysql
+    ports:
+      - "3307:3306"
+
+volumes:
+  mysql_data:
