@@ -1,0 +1,47 @@
+# 如果在 branch main push 時，修改的是 dev/docker-compose.yml，就把 dev/docker-compose.yml 傳到 dev 環境，如果是 prd/docker-compose.yml，就把 prd/docker-compose.yml 傳到 prd 環境。
+name: Compose Sync
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy-dev:
+    runs-on: ubuntu-latest
+    environment: dev
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Sync
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USER }}
+          key: ${{ secrets.KEY }}
+          source: dev/docker-compose.yml
+          target: ~/web/tudigong
+          strip_components: 1
+
+  # 這個 job 暫時不用
+  deploy-prd:
+    runs-on: ubuntu-latest
+    environment: prd
+    if: false  # 這樣這個 job 永遠不會執行 
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Sync
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USER }}
+          key: ${{ secrets.KEY }}
+          source: prd/docker-compose.yml
+          target: ~/web/tudigong # 這邊可能到時要改
+          strip_components: 1
+          

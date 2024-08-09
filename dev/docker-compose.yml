@@ -3,7 +3,7 @@ services:
     image: tudigong-web:main.amd64
     env_file: .env.web
     ports:
-      - "8888:3000"  # 主機的 8888 端口映射到容器的 3000 端口
+      - "8888:3000"  # 主機的 8888 端口映射到容器的 3000 端口 
     volumes:
       - /app/node_modules
     environment:
