@@ -42,6 +42,7 @@ runs:
         key: ${{ runner.os }}-buildx-${{ github.sha }}
         restore-keys: |
           ${{ runner.os }}-buildx-
+        expire-in: 7d
 
     - name: Build Docker image
       shell: bash
