@@ -1,5 +1,5 @@
 # 如果在 branch main push 時，修改的是 dev/docker-compose.yml，就把 dev/docker-compose.yml 傳到 dev 環境，如果是 prd/docker-compose.yml，就把 prd/docker-compose.yml 傳到 prd 環境。
-name: Compose Sync
+name: deploy Compose and restart
 
 on:
   push:
@@ -24,6 +24,18 @@ jobs:
           source: dev/docker-compose.yml
           target: ~/web/tudigong
           strip_components: 1
+
+
+      - name: restart web, service, db
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USER }}
+          key: ${{ secrets.KEY }}
+          port: 22
+          script: |
+            cd ~/web/tudigong
+            docker compose restart
 
   # 這個 job 暫時不用
   deploy-prd:
