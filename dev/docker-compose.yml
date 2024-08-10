@@ -12,8 +12,6 @@ services:
   service:
     image: tudigong-service:main.amd64
     env_file: .env.service
-    volumes:
-      - .:/app
     ports:
       - "8080:8080"
     depends_on:
