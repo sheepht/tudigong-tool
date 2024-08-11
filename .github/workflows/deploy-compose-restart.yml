@@ -15,13 +15,21 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: set .env
+        run: |
+          echo "PING_URL=${{secrets.PING_URL}}" >> dev/.env
+
+      - name: set healthcheck.sh permission
+        run: chmod +x dev/healthcheck.sh
+
       - name: Sync
         uses: appleboy/scp-action@master
         with:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USER }}
           key: ${{ secrets.KEY }}
-          source: dev/docker-compose.yml
+          # dev/docker-compose.yml, dev/healtcheck.sh
+          source: dev/*
           target: ~/web/tudigong
           strip_components: 1
 
