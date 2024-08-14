@@ -1,0 +1,35 @@
+name: DOWN UP the Server
+
+on:
+  workflow_dispatch:
+    inputs:
+      stage:
+        type: choice
+        required: true
+        description: "Choose the stage to down up"
+        options:
+          - dev
+          - prd
+
+jobs:
+  down-up:
+    runs-on: ubuntu-latest
+    environment: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.stage || 'dev' }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: down up the service
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USER }}
+          key: ${{ secrets.KEY }}
+          port: 22
+          script: |
+            set -e
+            set -x
+            cd ~/web/tudigong
+            docker compose down
+            docker compose up -d
