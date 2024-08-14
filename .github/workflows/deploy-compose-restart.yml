@@ -30,7 +30,7 @@ jobs:
           key: ${{ secrets.KEY }}
           # dev/docker-compose.yml, dev/healtcheck.sh
           source: dev/*
-          target: ~/web/tudigong
+          target: ~/web/dev
           strip_components: 1
 
       - name: restart web, db, service, healthcheck-reporter
@@ -41,7 +41,7 @@ jobs:
           key: ${{ secrets.KEY }}
           port: 22
           script: |
-            cd ~/web/tudigong
+            cd ~/web/dev
             docker compose restart web
             docker compose restart db
             docker compose restart service
@@ -64,5 +64,5 @@ jobs:
           username: ${{ secrets.USER }}
           key: ${{ secrets.KEY }}
           source: prd/docker-compose.yml
-          target: ~/web/tudigong # 這邊可能到時要改
+          target: ~/web/prd # 這邊可能到時要改
           strip_components: 1
