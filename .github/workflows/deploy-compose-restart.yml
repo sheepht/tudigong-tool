@@ -33,8 +33,7 @@ jobs:
           target: ~/web/tudigong
           strip_components: 1
 
-
-      - name: restart web, service, db
+      - name: restart web, db, service, healthcheck-reporter
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.HOST }}
@@ -43,14 +42,17 @@ jobs:
           port: 22
           script: |
             cd ~/web/tudigong
-            docker compose restart
+            docker compose restart web
+            docker compose restart db
+            docker compose restart service
+            docker compose restart healthcheck-reporter
 
   # 這個 job 暫時不用
   deploy-prd:
     runs-on: ubuntu-latest
     environment: prd
-    if: false  # 這樣這個 job 永遠不會執行 
-    
+    if: false # 這樣這個 job 永遠不會執行
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -64,4 +66,3 @@ jobs:
           source: prd/docker-compose.yml
           target: ~/web/tudigong # 這邊可能到時要改
           strip_components: 1
-          
