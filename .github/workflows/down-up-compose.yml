@@ -30,6 +30,6 @@ jobs:
           script: |
             set -e
             set -x
-            cd ~/web/tudigong
+            cd ~/web/${{ github.event_name == 'workflow_dispatch' && github.event.inputs.stage || 'dev' }}
             docker compose down
             docker compose up -d
