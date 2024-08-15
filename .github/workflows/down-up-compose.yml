@@ -32,4 +32,4 @@ jobs:
             set -x
             cd ~/web/${{ github.event_name == 'workflow_dispatch' && github.event.inputs.stage || 'dev' }}
             docker compose down
-            docker compose up -d
+            env $(cat .env.web .env.service | xargs) docker compose up -d

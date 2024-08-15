@@ -46,9 +46,9 @@ jobs:
           port: 22
           script: |
             cd ~/web/dev
-            docker compose restart dev-web
+            env $(cat .env.web | xargs) docker compose restart dev-web
             docker compose restart dev-db
-            docker compose restart dev-service
+            env $(cat .env.service | xargs) docker compose restart dev-service
             docker compose restart dev-healthcheck-web-reporter
             docker compose restart dev-healthcheck-service-reporter
 

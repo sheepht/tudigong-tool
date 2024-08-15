@@ -31,7 +31,7 @@ runs:
         context: .
         file: ./Dockerfile
         platforms: linux/amd64
-        tags: ${{ inputs.project_name }}:${{ github.ref_name }}.amd64
+        tags: ${{ inputs.project_name }}:${{ inputs.stage }}.${{ github.ref_name }}.amd64
         outputs: type=docker,dest=${{ inputs.project_name }}-amd64.tar
         cache-from: type=gha
         cache-to: type=gha,mode=max
