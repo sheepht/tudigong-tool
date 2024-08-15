@@ -4,8 +4,7 @@ URL="https://dev.tudigong.idv.tw"
 
 while true; do
 
-  # 發送 HTTP 請求並取得狀態碼
-  STATUS_CODE=$(curl -o /dev/null -s -w "%{http_code}\n" $URL)
+  STATUS_CODE=$(wget --spider --server-response -O- "$URL" 2>&1 | awk '/^  HTTP/{print $2}' | tail -1)
 
   if [ $STATUS_CODE -eq 200 ]; then
     wget -q -O- "${PING_URL_WEB}"

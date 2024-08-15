@@ -19,6 +19,7 @@ jobs:
         run: |
           echo "PING_URL_WEB=${{secrets.PING_URL_WEB}}" >> dev/.env
           echo "PING_URL_SERVICE=${{secrets.PING_URL_SERVICE}}" >> dev/.env
+          echo "REF_NAME=${{ github.ref_name }}" >> dev/.env
 
       - name: set healthcheck permission
         run: |
@@ -45,11 +46,11 @@ jobs:
           port: 22
           script: |
             cd ~/web/dev
-            docker compose restart web
-            docker compose restart db
-            docker compose restart service
-            docker compose restart healthcheck-web-reporter
-            docker compose restart healthcheck-service-reporter
+            docker compose restart dev-web
+            docker compose restart dev-db
+            docker compose restart dev-service
+            docker compose restart dev-healthcheck-web-reporter
+            docker compose restart dev-healthcheck-service-reporter
 
   # 這個 job 暫時不用
   deploy-prd:

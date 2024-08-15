@@ -1,20 +1,20 @@
-name: 'tudigong Deploy Action'
-description: 'Build and deploy Docker image to server'
+name: "tudigong Deploy Action"
+description: "Build and deploy Docker image to server"
 inputs:
   stage:
-    description: 'Deployment stage (dev or prd)'
+    description: "Deployment stage (dev or prd)"
     required: true
   project_name:
-    description: 'Name of the project'
+    description: "Name of the project"
     required: true
   host:
-    description: 'Server host'
+    description: "Server host"
     required: true
   user:
-    description: 'Server user'
+    description: "Server user"
     required: true
   key:
-    description: 'SSH private key'
+    description: "SSH private key"
     required: true
 runs:
   using: "composite"
@@ -62,4 +62,13 @@ runs:
           set -x
           docker load -i ~/docker-image/${{ inputs.project_name }}-amd64.tar
           rm ~/docker-image/${{ inputs.project_name }}-amd64.tar
+
+    - name: Docker image prune
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ inputs.host }}
+        username: ${{ inputs.user }}
+        key: ${{ inputs.key }}
+        port: 22
+        script: |
           docker image prune -f
