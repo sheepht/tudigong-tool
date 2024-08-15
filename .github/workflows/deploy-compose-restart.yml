@@ -19,17 +19,11 @@ jobs:
         run: |
           echo "PING_URL_WEB=${{secrets.PING_URL_WEB}}" >> dev/.env
           echo "PING_URL_SERVICE=${{secrets.PING_URL_SERVICE}}" >> dev/.env
-          echo "REF_NAME=${{ github.ref_name }}" >> dev/.env
 
       - name: set healthcheck permission
         run: |
           chmod +x dev/healthcheck-web.sh
           chmod +x dev/healthcheck-service.sh
-
-      - name: curl wait-for-it.sh
-        run: |
-          curl -o dev/wait-for-it.sh https://raw.githubusercontent.com/vishnubob/wait-for-it/master/wait-for-it.sh
-          chmod +x dev/wait-for-it.sh
 
       - name: Sync
         uses: appleboy/scp-action@master
@@ -51,17 +45,29 @@ jobs:
           port: 22
           script: |
             cd ~/web/dev
-            env $(cat .env.web .env.service | xargs) docker compose restart
+            env $(cat .env .env.web .env.service | xargs) docker compose restart dev-db
+            env $(cat .env .env.web .env.service | xargs) docker compose restart dev-service
+            env $(cat .env .env.web .env.service | xargs) docker compose restart dev-web
+            env $(cat .env .env.web .env.service | xargs) docker compose restart dev-healthcheck-web-reporter
+            env $(cat .env .env.web .env.service | xargs) docker compose restart dev-healthcheck-service-reporter
 
-  # 這個 job 暫時不用
   deploy-prd:
     runs-on: ubuntu-latest
     environment: prd
-    if: false # 這樣這個 job 永遠不會執行
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: set .env
+        run: |
+          echo "PING_URL_WEB=${{secrets.PING_URL_WEB}}" >> prd/.env
+          echo "PING_URL_SERVICE=${{secrets.PING_URL_SERVICE}}" >> prd/.env
+
+      - name: set healthcheck permission
+        run: |
+          chmod +x prd/healthcheck-web.sh
+          chmod +x prd/healthcheck-service.sh
 
       - name: Sync
         uses: appleboy/scp-action@master
@@ -69,6 +75,22 @@ jobs:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USER }}
           key: ${{ secrets.KEY }}
-          source: prd/docker-compose.yml
-          target: ~/web/prd # 這邊可能到時要改
+          # prd/docker-compose.yml, prd/healtcheck.sh
+          source: prd/*
+          target: ~/web/prd
           strip_components: 1
+
+      - name: restart web, db, service, healthcheck-web-reporter, healthcheck-service-reporter
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USER }}
+          key: ${{ secrets.KEY }}
+          port: 22
+          script: |
+            cd ~/web/prd
+            env $(cat .env .env.web .env.service | xargs) docker compose restart prd-db
+            env $(cat .env .env.web .env.service | xargs) docker compose restart prd-service
+            env $(cat .env .env.web .env.service | xargs) docker compose restart prd-web
+            env $(cat .env .env.web .env.service | xargs) docker compose restart prd-healthcheck-web-reporter
+            env $(cat .env .env.web .env.service | xargs) docker compose restart prd-healthcheck-service-reporter

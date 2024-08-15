@@ -1,6 +1,6 @@
 #!/bin/sh
 
-URL="https://dev.tudigong.idv.tw"
+URL="https://tudigong.idv.tw"
 
 while true; do
 

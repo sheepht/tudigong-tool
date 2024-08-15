@@ -1,31 +1,51 @@
 services:
-  web:
-    image: tudigong-web:main.amd64
+  prd-web:
+    image: tudigong-web:prd.${WEB_REF_NAME}.amd64
     env_file: .env.web
     ports:
-      - "8888:3000"  # 主機的 8888 端口映射到容器的 3000 端口
+      - "3002:3000" # 主機的 3001 端口映射到容器的 3000 端口
     volumes:
       - /app/node_modules
     environment:
       - NODE_ENV=production
 
-  service:
-    image: tudigong-service:main.amd64
+  prd-service:
+    image: tudigong-service:prd.${SERVICE_REF_NAME}.amd64
     env_file: .env.service
-    volumes:
-      - .:/app
     ports:
-      - "8080:8080"
+      - "8082:8080"
     depends_on:
-      - db
+      prd-db:
+        condition: service_healthy
+    command: /bin/sh /app/entrypoint.sh
 
-  db:
+  prd-healthcheck-web-reporter:
+    image: alpine:latest
+    volumes:
+      - ./healthcheck-web.sh:/app/healthcheck-web.sh
+    env_file:
+      - .env
+    command: /bin/sh /app/healthcheck-web.sh
+
+  prd-healthcheck-service-reporter:
+    image: alpine:latest
+    volumes:
+      - ./healthcheck-service.sh:/app/healthcheck-service.sh
+    env_file:
+      - .env
+    command: /bin/sh /app/healthcheck-service.sh
+
+  prd-db:
     image: mysql:8.0
     env_file: .env.service
     volumes:
       - mysql_data:/var/lib/mysql
     ports:
-      - "3307:3306"
+      - "3308:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
 
 volumes:
   mysql_data:
