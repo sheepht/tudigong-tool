@@ -1,9 +1,9 @@
 services:
-  web:
-    image: tudigong-web:main.amd64
+  dev-web:
+    image: tudigong-web:dev.${REF_NAME}.amd64
     env_file: .env.web
     ports:
-      - "3001:3000"  # 主機的 3001 端口映射到容器的 3000 端口 
+      - "3001:3000" # 主機的 3001 端口映射到容器的 3000 端口
     volumes:
       - /app/node_modules
     environment:
@@ -15,8 +15,8 @@ services:
       retries: 3
       start_period: 40s
 
-  service:
-    image: tudigong-service:main.amd64
+  dev-service:
+    image: tudigong-service:dev.${REF_NAME}.amd64
     env_file: .env.service
     ports:
       - "8080:8080"
@@ -30,29 +30,23 @@ services:
       retries: 3
       start_period: 40s
 
-  healthcheck-web-reporter:
+  dev-healthcheck-web-reporter:
     image: alpine:latest
-    # depends_on: # 不知為何用這個的話 service 一定會是 unhealthy
-    #   service:
-    #     condition: service_healthy
     volumes:
       - ./healthcheck-web.sh:/app/healthcheck-web.sh
     env_file:
       - .env
     command: /bin/sh /app/healthcheck-web.sh
 
-  healthcheck-service-reporter:
+  dev-healthcheck-service-reporter:
     image: alpine:latest
-    # depends_on: # 不知為何用這個的話 service 一定會是 unhealthy
-    #   service:
-    #     condition: service_healthy
     volumes:
       - ./healthcheck-service.sh:/app/healthcheck-service.sh
     env_file:
       - .env
     command: /bin/sh /app/healthcheck-service.sh
 
-  db:
+  dev-db:
     image: mysql:8.0
     env_file: .env.service
     volumes:
