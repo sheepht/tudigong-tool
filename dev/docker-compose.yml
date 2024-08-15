@@ -8,12 +8,6 @@ services:
       - /app/node_modules
     environment:
       - NODE_ENV=production
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3001"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
 
   dev-service:
     image: tudigong-service:dev.${SERVICE_REF_NAME}.amd64
@@ -23,28 +17,24 @@ services:
     depends_on:
       dev-db:
         condition: service_healthy
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
 
   dev-healthcheck-web-reporter:
     image: alpine:latest
     volumes:
+      - ./wait-for-it.sh:/app/wait-for-it.sh
       - ./healthcheck-web.sh:/app/healthcheck-web.sh
     env_file:
       - .env
-    command: /bin/sh /app/healthcheck-web.sh
+    command: /bin/sh -c "/app/wait-for-it.sh web:3000 -- /bin/sh /app/healthcheck-web.sh"
 
   dev-healthcheck-service-reporter:
     image: alpine:latest
     volumes:
+      - ./wait-for-it.sh:/app/wait-for-it.sh
       - ./healthcheck-service.sh:/app/healthcheck-service.sh
     env_file:
       - .env
-    command: /bin/sh /app/healthcheck-service.sh
+    command: /bin/sh -c "/app/wait-for-it.sh service:8080 -- /bin/sh /app/healthcheck-service.sh"
 
   dev-db:
     image: mysql:8.0
