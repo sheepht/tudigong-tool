@@ -12,8 +12,8 @@ services:
   prd-service:
     image: tudigong-service:prd.${SERVICE_REF_NAME}.amd64
     env_file: .env.service
-    ports:
-      - "8082:8080"
+    # ports: # 這裡不需要開放 port，因為只有 web 會連 service
+    #   - "8082:8080"
     depends_on:
       prd-db:
         condition: service_healthy
