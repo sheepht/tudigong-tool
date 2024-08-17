@@ -1,0 +1,1 @@
+env $(cat $HOME/web/$ENV/.env $HOME/web/$ENV/.env.web $HOME/web/$ENV/.env.service | xargs) bash $HOME/web/$ENV/backup.sh

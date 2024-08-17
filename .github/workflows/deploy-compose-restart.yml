@@ -7,6 +7,27 @@ on:
       - main
 
 jobs:
+  deploy-backup-sh:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+
+      - name: set permission
+        run: |
+          chmod +x slack-and-mail.sh
+
+      - name: Sync
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USER }}
+          key: ${{ secrets.KEY }}
+          source: slack-and-mail.sh
+          target: ~/backup
+
   deploy-dev:
     runs-on: ubuntu-latest
     environment: dev
@@ -19,9 +40,14 @@ jobs:
         run: |
           echo "PING_URL_WEB=${{secrets.PING_URL_WEB}}" >> dev/.env
           echo "PING_URL_SERVICE=${{secrets.PING_URL_SERVICE}}" >> dev/.env
+          echo "SLACK_TOKEN=${{secrets.SLACK_TOKEN}}" >> dev/.env
+          echo "SLACK_CHANNEL_ID=${{secrets.SLACK_CHANNEL_ID}}" >> dev/.env
+          echo "GMAIL_APP_PASS=${{secrets.GMAIL_APP_PASS}}" >> dev/.env
 
       - name: set healthcheck permission
         run: |
+          cp backup.sh dev/backup.sh
+          chmod +x dev/backup.sh
           chmod +x dev/healthcheck-web.sh
           chmod +x dev/healthcheck-service.sh
 
@@ -63,9 +89,14 @@ jobs:
         run: |
           echo "PING_URL_WEB=${{secrets.PING_URL_WEB}}" >> prd/.env
           echo "PING_URL_SERVICE=${{secrets.PING_URL_SERVICE}}" >> prd/.env
+          echo "SLACK_TOKEN=${{secrets.SLACK_TOKEN}}" >> prd/.env
+          echo "SLACK_CHANNEL_ID=${{secrets.SLACK_CHANNEL_ID}}" >> prd/.env
+          echo "GMAIL_APP_PASS=${{secrets.GMAIL_APP_PASS}}" >> prd/.env
 
       - name: set healthcheck permission
         run: |
+          cp backup.sh prd/backup.sh
+          chmod +x prd/backup.sh
           chmod +x prd/healthcheck-web.sh
           chmod +x prd/healthcheck-service.sh
 
