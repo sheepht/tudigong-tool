@@ -55,7 +55,7 @@ describe("Login Page Test", () => {
     cy.get("#password").should("exist");
   });
 
-  it("應該在輸入正確的登錄信息時成功登錄", () => {
+  it("should successfully login when submitting correct login information", () => {
     // 輸入正確的用戶名和密碼
     cy.get("#username").type("sexyoung");
     cy.get("#password").type("test");
