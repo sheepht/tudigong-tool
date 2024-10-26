@@ -3,5 +3,6 @@
 declare namespace Cypress {
   interface Chainable {
     loginAndSetToken(): Chainable<void>;
+    checkNavigationLinks(): Chainable<void>;
   }
 }

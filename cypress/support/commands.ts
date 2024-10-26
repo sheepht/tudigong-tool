@@ -43,3 +43,13 @@ Cypress.Commands.add("loginAndSetToken", () => {
     localStorage.setItem("token", response.body.token);
   });
 });
+
+Cypress.Commands.add("checkNavigationLinks", () => {
+  cy.contains("建立合約").should("be.visible");
+  cy.contains("建立產品").should("be.visible");
+  cy.contains("建立客戶").should("be.visible");
+
+  cy.contains("建立合約").should("have.attr", "href", "/contract/create");
+  cy.contains("建立產品").should("have.attr", "href", "/product");
+  cy.contains("建立客戶").should("have.attr", "href", "/customer");
+});

@@ -2,6 +2,11 @@ describe("Customer Page Test", () => {
   beforeEach(() => {
     cy.loginAndSetToken();
     cy.visit("/customer");
+    cy.get("main")
+      .contains("h1", "客戶列表")
+      .parent()
+      .parent()
+      .as("customerList");
   });
 
   it("should display customer page", () => {
@@ -9,13 +14,7 @@ describe("Customer Page Test", () => {
   });
 
   it("should display create contract, create customer, create product text", () => {
-    cy.contains("建立合約").should("be.visible");
-    cy.contains("建立產品").should("be.visible");
-    cy.contains("建立客戶").should("be.visible");
-
-    cy.contains("建立合約").should("have.attr", "href", "/contract/create");
-    cy.contains("建立產品").should("have.attr", "href", "/product");
-    cy.contains("建立客戶").should("have.attr", "href", "/customer");
+    cy.checkNavigationLinks();
   });
 
   it("should display customer form", () => {
@@ -38,12 +37,6 @@ describe("Customer Page Test", () => {
   });
 
   it("should display customer list", () => {
-    cy.get("main")
-      .contains("h1", "客戶列表")
-      .parent()
-      .parent()
-      .as("customerList");
-
     cy.get("@customerList")
       .find("input")
       .should("exist")
@@ -95,12 +88,6 @@ describe("Customer Page Test", () => {
   });
 
   it("should filter customer list", () => {
-    cy.get("main")
-      .contains("h1", "客戶列表")
-      .parent()
-      .parent()
-      .as("customerList");
-
     cy.get("@customerList").find("ul li").should("have.length", 6);
 
     cy.get("@customerList").find("input[placeholder='搜尋']").clear().type("1");
