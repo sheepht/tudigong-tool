@@ -3,3 +3,5 @@
 cypress/videos
 
 .DS_Store
+# 但是不排除 ci/.env
+!ci/.env
