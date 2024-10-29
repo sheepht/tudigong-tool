@@ -1,1 +1,5 @@
 .env
+
+cypress/videos
+
+.DS_Store

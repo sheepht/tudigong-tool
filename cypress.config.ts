@@ -6,8 +6,10 @@ dotenv.config(); // 載入 .env 檔案
 export default defineConfig({
   e2e: {
     baseUrl: process.env.CYPRESS_baseUrl,
+    defaultCommandTimeout: 300000,
     setupNodeEvents(on, config) {
       // implement node event listeners here
     },
+    video: true,
   },
 });

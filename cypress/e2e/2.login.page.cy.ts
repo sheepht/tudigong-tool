@@ -9,6 +9,14 @@ describe("Login Page Test", () => {
     cy.get("#password").should("exist");
   });
 
+  it("should find login form", () => {
+    // 檢查表單是否存在
+    cy.get("form").should("exist");
+
+    // 檢查表單是否有提交按鈕
+    cy.get("form").find("button[type='submit']").should("exist");
+  });
+
   it("should display validation messages when submitting an empty form", () => {
     // 嘗試提交空表單
     cy.get("form").submit();
