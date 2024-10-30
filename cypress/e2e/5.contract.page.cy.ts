@@ -100,6 +100,42 @@ describe("Contract Page Test", () => {
     cy.get("@contractForm").contains("button", "建立合約").should("exist");
   });
 
+  it("should display contract distribution form", () => {
+    cy.get("@contractDistributionForm")
+      .contains("label", "主客戶金額")
+      .should("be.visible")
+      .next()
+      .find("input")
+      .should("exist");
+      // .and("have.attr", "type", "text"); 這個等前端修正
+
+    cy.get("@contractDistributionForm")
+      .contains("label", "主客戶姓名")
+      .should("be.visible")
+      .next()
+      .find("input")
+      .should("exist")
+      .and("have.attr", "type", "text")
+      .and("have.attr", "required", "required")
+      .and("have.attr", "disabled", "disabled");
+
+    cy.get("@contractDistributionForm")
+      .contains("label", "主客戶盈餘分配")
+      .should("be.visible")
+      .next()
+      .find("input")
+      .should("exist")
+      .and("have.attr", "type", "text")
+      .and("have.attr", "value", "0")
+      .and("have.attr", "required", "required")
+      .and("have.attr", "disabled", "disabled");
+
+    cy.get("@contractDistributionForm")
+      .contains("div", "新增附掛客戶")
+      .should("exist")
+      .and("be.visible");
+  });
+
   // TODO: 因為會改到資料庫，所以稍後處理
   it.skip("should create contract");
 
