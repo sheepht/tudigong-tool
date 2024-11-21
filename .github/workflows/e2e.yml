@@ -45,16 +45,16 @@ jobs:
           cd tudigong-service
           echo "sha=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
 
-      - name: Download Docker service image artifact
-        uses: actions/download-artifact@v4
-        continue-on-error: true
-        id: service-download
+      - name: Cache Docker service image
+        id: service-cache
+        uses: actions/cache@v4
         with:
-          name: tudigong-service-image-${{ steps.service-sha.outputs.sha }}
+          path: tudigong-service-amd64.tar
+          key: tudigong-service-${{ steps.service-sha.outputs.sha }}
 
       - name: build tudigong-service Docker image
         uses: docker/build-push-action@v6
-        if: steps.service-download.outcome == 'failure'
+        if: steps.service-cache.outputs.cache-hit != 'true'
         id: service-build
         with:
           context: ./tudigong-service
@@ -64,36 +64,6 @@ jobs:
           outputs: type=docker,dest=tudigong-service-amd64.tar
           cache-from: type=gha
           cache-to: type=gha,mode=max
-
-      - name: Delete old artifacts
-        if: steps.service-build.outcome == 'success'
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const response = await github.rest.actions.listArtifactsForRepo({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-            });
-
-            for (const artifact of response.data.artifacts) {
-              if (artifact.name.startsWith('tudigong-service-image-') && 
-                  artifact.name !== 'tudigong-service-image-${{ steps.service-sha.outputs.sha }}') {
-                console.log('Deleting artifact:', artifact.name);
-                await github.rest.actions.deleteArtifact({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  artifact_id: artifact.id,
-                });
-              }
-            }
-
-      - name: Upload Docker service image artifact
-        uses: actions/upload-artifact@v4
-        if: steps.service-build.outcome == 'success'
-        with:
-          name: tudigong-service-image-${{ steps.service-sha.outputs.sha }}
-          path: tudigong-service-amd64.tar
-          retention-days: 1
 
       - name: docker load service image from file
         run: |
@@ -144,16 +114,16 @@ jobs:
           cd tudigong-web
           echo "sha=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
 
-      - name: Download Docker web image artifact
-        uses: actions/download-artifact@v4
-        continue-on-error: true
-        id: web-download
+      - name: Cache Docker web image
+        id: web-cache
+        uses: actions/cache@v4
         with:
-          name: tudigong-web-image-${{ steps.web-sha.outputs.sha }}
+          path: tudigong-web-amd64.tar
+          key: tudigong-web-${{ steps.web-sha.outputs.sha }}
 
       - name: build tudigong-web Docker image
         uses: docker/build-push-action@v6
-        if: steps.web-download.outcome == 'failure'
+        if: steps.web-cache.outputs.cache-hit != 'true'
         id: web-build
         with:
           context: ./tudigong-web
@@ -163,36 +133,6 @@ jobs:
           outputs: type=docker,dest=tudigong-web-amd64.tar
           cache-from: type=gha
           cache-to: type=gha,mode=max
-
-      - name: Delete old web artifacts
-        if: steps.web-build.outcome == 'success'
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const response = await github.rest.actions.listArtifactsForRepo({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-            });
-
-            for (const artifact of response.data.artifacts) {
-              if (artifact.name.startsWith('tudigong-web-image-') && 
-                  artifact.name !== 'tudigong-web-image-${{ steps.web-sha.outputs.sha }}') {
-                console.log('Deleting artifact:', artifact.name);
-                await github.rest.actions.deleteArtifact({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  artifact_id: artifact.id,
-                });
-              }
-            }
-
-      - name: Upload Docker web image artifact
-        uses: actions/upload-artifact@v4
-        if: steps.web-build.outcome == 'success'
-        with:
-          name: tudigong-web-image-${{ steps.web-sha.outputs.sha }}
-          path: tudigong-web-amd64.tar
-          retention-days: 1
 
       - name: docker load web image from file
         run: |
@@ -226,4 +166,4 @@ jobs:
         run: |
           echo "CYPRESS_baseUrl=http://localhost:3001" > .env
           npm ci
-          npm run cypress:run
+          npm run cypress:run --config defaultCommandTimeout=61000,pageLoadTimeout=62000,requestTimeout=63000

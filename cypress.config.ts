@@ -9,6 +9,7 @@ export default defineConfig({
     // defaultCommandTimeout: 300000,
     setupNodeEvents(on, config) {
       // implement node event listeners here
+      return config;
     },
     video: true,
   },
