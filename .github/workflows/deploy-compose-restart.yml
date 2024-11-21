@@ -13,7 +13,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      
 
       - name: set permission
         run: |
@@ -80,6 +79,7 @@ jobs:
   deploy-prd:
     runs-on: ubuntu-latest
     environment: prd
+    if: false # 添加此行以确保此 job 永不执行
 
     steps:
       - name: Checkout
