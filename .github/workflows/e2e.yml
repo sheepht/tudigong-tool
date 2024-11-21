@@ -211,7 +211,7 @@ jobs:
         run: |
           # 等待服務完全啟動
           for i in {1..30}; do
-            if curl -s http://localhost:3001/health > /dev/null; then
+            if curl -s http://localhost:3001 > /dev/null; then
               echo "Service is healthy"
               exit 0
             fi
@@ -221,3 +221,9 @@ jobs:
           echo "Service failed to become healthy"
           docker logs ci-ci-web-1
           exit 1
+
+      - name: Run e2e testing
+        run: |
+          echo "CYPRESS_baseUrl=http://localhost:3001" > .env
+          npm ci
+          npm run cypress:run
