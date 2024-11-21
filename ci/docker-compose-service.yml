@@ -1,22 +1,27 @@
 services:
-  # web:
+  # ci-web:
   #   env_file: ./.env
-  #   image: tudigong-web:latest
+  #   image: tudigong-web:latest.amd64
   #   ports:
   #     - "3001:3000"
   #   depends_on:
-  #     - service
+  #     - ci-service
 
-  service:
+  ci-service:
     env_file: ./.env.service
-    image: tudigong-service:latest
+    image: tudigong-service:latest.amd64
     ports:
       - "8081:8080"
     depends_on:
-      db:
+      ci-db:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
-  db:
+  ci-db:
     env_file: ./.env.service
     image: mysql:8.0
     volumes:
