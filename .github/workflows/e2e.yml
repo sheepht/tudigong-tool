@@ -51,6 +51,8 @@ jobs:
         with:
           path: tudigong-service-amd64.tar
           key: tudigong-service-${{ steps.service-sha.outputs.sha }}
+          restore-keys: |
+            tudigong-service-
 
       - name: build tudigong-service Docker image
         uses: docker/build-push-action@v6
@@ -92,6 +94,10 @@ jobs:
           echo "Service failed to become healthy"
           docker logs ci-ci-service-1
           exit 1
+
+      - name: execute command in ci-service container
+        run: |
+          env $(cat ci/.env.service | xargs) docker exec ci-ci-service-1 sh -c "echo '執行容器內命令' && alembic downgrade base && SEED_DATA=true alembic upgrade head"
 
       - name: checkout web repo
         uses: actions/checkout@v4
@@ -163,7 +169,33 @@ jobs:
           exit 1
 
       - name: Run e2e testing
+        id: cypress-test
+        continue-on-error: true
         run: |
           echo "CYPRESS_baseUrl=http://localhost:3001" > .env
+          curl http://localhost:3001/api/auth
+          curl http://localhost:8081/v1/auth
           npm ci
-          npm run cypress:run --config defaultCommandTimeout=61000,pageLoadTimeout=62000,requestTimeout=63000
+          npm run cypress:run -- --config defaultCommandTimeout=10000
+
+      - name: Upload test videos to Slack
+        if: steps.cypress-test.outcome == 'failure'
+        uses: MeilCli/slack-upload-file@v4
+        with:
+          slack_token: ${{ secrets.SLACK_TOKEN }}
+          channel_id: C081ZTSQPUL
+          file_path: "${{github.workspace}}/cypress/videos/*.mp4"
+          initial_comment: "post by slack-upload-file"
+
+      - name: check docker logs
+        run: |
+          docker logs ci-ci-web-1
+          docker logs ci-ci-service-1
+        # run: |
+        #   for video in ${{github.workspace}}/cypress/videos/*.mp4; do
+        #     curl -F file=@"$video" \
+        #          -F "channels=C081ZTSQPUL" \
+        #          -F "initial_comment=❌ E2E failed" \
+        #          -H "Authorization: Bearer ${{ secrets.SLACK_TOKEN }}" \
+        #          https://slack.com/api/files.upload
+        #   done

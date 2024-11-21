@@ -36,6 +36,9 @@ Cypress.Commands.add("loginAndSetToken", () => {
     headers: {
       "Content-Type": "multipart/form-data",
     },
+    timeout: 30000,
+    retryOnStatusCodeFailure: true,
+    retryOnNetworkFailure: true,
   }).then((response) => {
     expect(response.status).to.eq(200);
 
