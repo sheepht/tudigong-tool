@@ -2,22 +2,133 @@ name: e2e testing
 
 on:
   push:
-    branches: ["chore/e2e-action"]
+    branches:
+      - feat/action-to-e2e
+
+# 添加權限設置
+permissions:
+  contents: read
+  actions: write # 添加 actions 寫入權限，用於管理 artifacts
 
 jobs:
-  build:
+  e2e-testing:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
       - name: checkout current repo
         uses: actions/checkout@v4
+
+      - name: checkout tudigong-service repo
+        uses: actions/checkout@v4
+        with:
+          repository: tu-di-gong/tudigong-service
+          path: tudigong-service
+          ref: dev
+          token: ${{ secrets.ORG_PAT }}
+
+      - name: copy ci/.env.service to tudigong-service
+        run: |
+          # cp ci/.env.service tudigong-service/.env.service
+          cd tudigong-service
+          ls -la
+          pwd
+
+      - name: Get tudigong-service SHA
+        id: service-sha
+        run: |
+          cd tudigong-service
+          echo "sha=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+
+      - name: Download Docker service image artifact
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        id: service-download
+        with:
+          name: tudigong-service-image-${{ steps.service-sha.outputs.sha }}
+
+      - name: build tudigong-service Docker image
+        uses: docker/build-push-action@v6
+        if: steps.service-download.outcome == 'failure'
+        id: service-build
+        with:
+          context: ./tudigong-service
+          file: ./tudigong-service/Dockerfile
+          platforms: linux/amd64
+          tags: tudigong-service:latest.amd64
+          outputs: type=docker,dest=tudigong-service-amd64.tar
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Delete old artifacts
+        if: steps.service-build.outcome == 'success'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const response = await github.rest.actions.listArtifactsForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+            });
+
+            for (const artifact of response.data.artifacts) {
+              if (artifact.name.startsWith('tudigong-service-image-') && 
+                  artifact.name !== 'tudigong-service-image-${{ steps.service-sha.outputs.sha }}') {
+                console.log('Deleting artifact:', artifact.name);
+                await github.rest.actions.deleteArtifact({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  artifact_id: artifact.id,
+                });
+              }
+            }
+
+      - name: Upload Docker service image artifact
+        uses: actions/upload-artifact@v4
+        if: steps.service-build.outcome == 'success'
+        with:
+          name: tudigong-service-image-${{ steps.service-sha.outputs.sha }}
+          path: tudigong-service-amd64.tar
+          retention-days: 1
+
+      - name: docker load service image from file
+        run: |
+          docker load -i tudigong-service-amd64.tar
+          docker images
+
+      - name: Run docker-compose-service
+        run: |
+          docker compose -f ci/docker-compose-service.yml up -d
+
+      - name: check docker-compose-service status
+        run: |
+          docker ps -a
+
+      - name: check docker-service health
+        run: |
+          # 等待服務完全啟動
+          for i in {1..30}; do
+            if curl -s http://localhost:8081/health > /dev/null; then
+              echo "Service is healthy"
+              exit 0
+            fi
+            echo "Waiting for service to be ready... ($i/30)"
+            sleep 2
+          done
+          echo "Service failed to become healthy"
+          docker logs ci-ci-service-1
+          exit 1
 
       - name: checkout web repo
         uses: actions/checkout@v4
         with:
           repository: tu-di-gong/tudigong-web
           path: tudigong-web
-          ref: main
+          ref: dev
           token: ${{ secrets.ORG_PAT }}
 
       - name: copy ci/.env to tudigong-web
@@ -25,45 +136,88 @@ jobs:
           cp ci/.env tudigong-web/.env
           cd tudigong-web
           ls -la
+          pwd
 
-      - name: checkout service repo
-        uses: actions/checkout@v4
-        with:
-          repository: tu-di-gong/tudigong-service
-          path: tudigong-service
-          ref: main
-          token: ${{ secrets.ORG_PAT }}
-
-      - name: setup docker buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: build tudigong-service Docker image
-        uses: docker/build-push-action@v6
-        with:
-          context: tudigong-service
-          push: false
-          load: true
-          platforms: linux/amd64
-          tags: tudigong-service:latest
-
-      - name: Run docker-compose
-        uses: hoverkraft-tech/compose-action@v2.0.2
-        with:
-          compose-file: "./ci/docker-compose.yml"
-
-      - name: test the compose service
+      - name: Get tudigong-web SHA
+        id: web-sha
         run: |
-          curl http://localhost:8081/health
+          cd tudigong-web
+          echo "sha=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+
+      - name: Download Docker web image artifact
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        id: web-download
+        with:
+          name: tudigong-web-image-${{ steps.web-sha.outputs.sha }}
 
       - name: build tudigong-web Docker image
         uses: docker/build-push-action@v6
+        if: steps.web-download.outcome == 'failure'
+        id: web-build
         with:
-          context: tudigong-web
-          push: false
-          load: true
+          context: ./tudigong-web
+          file: ./tudigong-web/Dockerfile
           platforms: linux/amd64
-          tags: tudigong-web:latest
+          tags: tudigong-web:latest.amd64
+          outputs: type=docker,dest=tudigong-web-amd64.tar
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
-      # - name: test docker image
-      #   run: |
-      #     docker run tudigong-web:latest
+      - name: Delete old web artifacts
+        if: steps.web-build.outcome == 'success'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const response = await github.rest.actions.listArtifactsForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+            });
+
+            for (const artifact of response.data.artifacts) {
+              if (artifact.name.startsWith('tudigong-web-image-') && 
+                  artifact.name !== 'tudigong-web-image-${{ steps.web-sha.outputs.sha }}') {
+                console.log('Deleting artifact:', artifact.name);
+                await github.rest.actions.deleteArtifact({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  artifact_id: artifact.id,
+                });
+              }
+            }
+
+      - name: Upload Docker web image artifact
+        uses: actions/upload-artifact@v4
+        if: steps.web-build.outcome == 'success'
+        with:
+          name: tudigong-web-image-${{ steps.web-sha.outputs.sha }}
+          path: tudigong-web-amd64.tar
+          retention-days: 1
+
+      - name: docker load web image from file
+        run: |
+          docker load -i tudigong-web-amd64.tar
+          docker images
+
+      - name: Run docker-compose-web
+        run: |
+          docker compose -f ci/docker-compose-web.yml up -d
+
+      - name: check docker-compose-web status
+        run: |
+          docker ps -a
+
+      - name: check docker-web health
+        run: |
+          # 等待服務完全啟動
+          for i in {1..30}; do
+            if curl -s http://localhost:3001/health > /dev/null; then
+              echo "Service is healthy"
+              exit 0
+            fi
+            echo "Waiting for web to be ready... ($i/30)"
+            sleep 2
+          done
+          echo "Service failed to become healthy"
+          docker logs ci-ci-web-1
+          exit 1
