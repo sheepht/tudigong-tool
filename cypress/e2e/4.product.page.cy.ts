@@ -61,7 +61,7 @@ describe("Customer Page Test", () => {
       .next()
       .find("input")
       .should("exist")
-      .and("have.attr", "value", "#ffffff");
+      .and("have.attr", "value", "#eeeeee");
     cy.get("@productForm")
       .contains("新合約預設產品")
       .should("be.visible")
@@ -103,6 +103,7 @@ describe("Customer Page Test", () => {
           "周期",
           "顏色",
           "預設",
+          "編輯",
         ];
 
         cy.get("th").should("have.length", expectedHeaders.length);
