@@ -45,6 +45,7 @@ jobs:
           path: tudigong-service-amd64.tar
           key: tudigong-service-${{ steps.service-sha.outputs.sha }}
           restore-keys: |
+            tudigong-service-${{ steps.service-sha.outputs.sha }}
             tudigong-service-
 
       - name: build tudigong-service Docker image
@@ -92,6 +93,9 @@ jobs:
         with:
           path: tudigong-web-amd64.tar
           key: tudigong-web-${{ steps.web-sha.outputs.sha }}
+          restore-keys: |
+            tudigong-web-${{ steps.web-sha.outputs.sha }}
+            tudigong-web-
 
       - name: build tudigong-web Docker image
         uses: docker/build-push-action@v6
