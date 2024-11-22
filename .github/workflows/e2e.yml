@@ -72,33 +72,6 @@ jobs:
           docker load -i tudigong-service-amd64.tar
           docker images
 
-      - name: Run docker-compose-service
-        run: |
-          docker compose -f ci/docker-compose-service.yml up -d
-
-      - name: check docker-compose-service status
-        run: |
-          docker ps -a
-
-      - name: check docker-service health
-        run: |
-          # 等待服務完全啟動
-          for i in {1..30}; do
-            if curl -s http://localhost:8081/health > /dev/null; then
-              echo "Service is healthy"
-              exit 0
-            fi
-            echo "Waiting for service to be ready... ($i/30)"
-            sleep 2
-          done
-          echo "Service failed to become healthy"
-          docker logs ci-ci-service-1
-          exit 1
-
-      - name: execute command in ci-service container
-        run: |
-          env $(cat ci/.env.service | xargs) docker exec ci-ci-service-1 sh -c "echo '執行容器內命令' && alembic downgrade base && SEED_DATA=true alembic upgrade head"
-
       - name: checkout web repo
         uses: actions/checkout@v4
         with:
@@ -145,13 +118,37 @@ jobs:
           docker load -i tudigong-web-amd64.tar
           docker images
 
-      - name: Run docker-compose-web
+      - name: Run docker-compose
+        continue-on-error: true
         run: |
-          docker compose -f ci/docker-compose-web.yml up -d
+          docker compose -f ci/docker-compose.yml up -d
 
-      - name: check docker-compose-web status
+      - name: check ci-ci-service-1
+        run: |
+          docker logs ci-ci-service-1
+
+      - name: check docker-compose status
         run: |
           docker ps -a
+
+      - name: check docker-service health
+        run: |
+          # 等待服務完全啟動
+          for i in {1..30}; do
+            if curl -s http://localhost:8081/health > /dev/null; then
+              echo "Service is healthy"
+              exit 0
+            fi
+            echo "Waiting for service to be ready... ($i/30)"
+            sleep 2
+          done
+          echo "Service failed to become healthy"
+          docker logs ci-ci-service-1
+          exit 1
+
+      - name: execute command in ci-service container
+        run: |
+          env $(cat ci/.env.service | xargs) docker exec ci-ci-service-1 sh -c "echo '執行容器內命令' && alembic downgrade base && SEED_DATA=true alembic upgrade head"
 
       - name: check docker-web health
         run: |
