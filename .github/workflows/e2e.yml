@@ -1,9 +1,9 @@
 name: e2e testing
 
 on:
-  push:
-    branches:
-      - feat/action-to-e2e
+  workflow_dispatch:
+  repository_dispatch:
+    types: [web-merged, service-merged]
 
 # 添加權限設置
 permissions:
