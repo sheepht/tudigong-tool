@@ -10,7 +10,7 @@ describe("Contract Page Test", () => {
   });
 
   it("should display contract page", () => {
-    cy.url().should("include", "/contract/create");
+    cy.location("pathname").should("eq", "/contract/create");
   });
 
   it("should display create contract, create customer, create product text", () => {
@@ -107,7 +107,7 @@ describe("Contract Page Test", () => {
       .next()
       .find("input")
       .should("exist");
-      // .and("have.attr", "type", "text"); 這個等前端修正
+    // .and("have.attr", "type", "text"); 這個等前端修正
 
     cy.get("@contractDistributionForm")
       .contains("label", "主客戶姓名")
