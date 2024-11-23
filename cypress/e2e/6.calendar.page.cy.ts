@@ -97,7 +97,7 @@ describe("Calendar Page Test", () => {
           .and("have.attr", "href", "/contract/create");
       });
 
-      it.only("should calendar date display correct text", () => {
+      it("should calendar date display correct text", () => {
         cy.get("@calendar").find("tbody td").should("have.length", 35);
 
         cy.get("@calendar")
@@ -145,6 +145,99 @@ describe("Calendar Page Test", () => {
                 .should("match", /^\$\d+(,\d+)*$/);
             }
           });
+      });
+    });
+
+    describe("calendar behavior", () => {
+      it("should validate drawer button behavior", () => {
+        cy.get("@drawerButton").click();
+        cy.get("@header")
+          .next()
+          .should("have.css", "background-color", "rgba(0, 0, 0, 0.5)");
+        cy.get("@header")
+          .next()
+          .next()
+          .as("drawer")
+          .should("have.css", "z-index", "50");
+
+        cy.get("@header").next().click({ force: true });
+
+        cy.get("@drawer").should("not.exist");
+      });
+
+      it("should validate date menu behavior", () => {
+        cy.get("@dateMenu").contains("«").click();
+        cy.get("@dateMenu")
+          .invoke("text")
+          .should("match", /^2024 02月«本月»$/);
+        cy.location("search").should("eq", "?month=2024%2F02");
+
+        cy.get("@note").should(
+          "have.text",
+          " 這是二月的備註 打很長哈哈哈哈哈哈"
+        );
+        cy.get("@summary").should("have.text", "續 0新 0加 0回 110移 110共 0");
+
+        cy.get("@dateMenu").contains("«").click();
+        cy.get("@dateMenu")
+          .invoke("text")
+          .should("match", /^2024 01月«本月»$/);
+        cy.location("search").should("eq", "?month=2024%2F01");
+
+        cy.get("@note").should("have.text", " 這是一月的備註");
+        cy.get("@summary").should("have.text", "續 0新 360加 0回 0移 0共 360");
+
+        cy.get("@dateMenu").contains("»").click();
+        cy.get("@dateMenu").contains("»").click();
+        cy.get("@dateMenu")
+          .invoke("text")
+          .should("match", /^2024 03月«本月»$/);
+        cy.location("search").should("eq", "?month=2024%2F03");
+        cy.get("@summary").should(
+          "have.text",
+          "續 210新 0加 40回 290移 110共 250"
+        );
+
+        const currentYear = new Date().getFullYear();
+        const currentMonth = ("00" + String(new Date().getMonth() + 1)).slice(
+          -2
+        );
+
+        cy.get("@dateMenu").contains("本月").click();
+        cy.get("@dateMenu")
+          .invoke("text")
+          .should("match", RegExp(`^${currentYear} ${currentMonth}月«本月»$`));
+        cy.location("search").should(
+          "eq",
+          `?month=${currentYear}%2F${currentMonth}`
+        );
+      });
+
+      it("should validate note behavior", () => {
+        cy.get("@note").click();
+        cy.get("#root")
+          .children()
+          .eq(1)
+          .as("noteModalBG")
+          .should("have.css", "background-color", "rgba(0, 0, 0, 0.5)");
+        cy.get("@noteModalBG")
+          .children()
+          .first()
+          .should("have.css", "background-color", "rgb(255, 255, 255)");
+        cy.get("@noteModalBG").click({ force: true });
+        cy.get("@noteModalBG").should("not.exist");
+      });
+
+      it("should validate calendar day behavior", () => {
+        cy.get("@calendar")
+          .find("tbody td")
+          .eq(9)
+          .find("div > :first-child")
+          .eq(0)
+          .click();
+
+        cy.location("pathname").should("eq", "/calendar-detail");
+        cy.location("search").should("eq", "?date=2024/03/06");
       });
     });
   });
