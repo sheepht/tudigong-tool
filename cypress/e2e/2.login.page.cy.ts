@@ -19,10 +19,10 @@ describe("Login Page Test", () => {
 
   it("should display validation messages when submitting an empty form", () => {
     // 嘗試提交空表單
-    cy.get("form").submit();
+    cy.get("form").find("button").click();
 
     // 驗證表單未被提交（URL應該保持不變）
-    cy.url().should("include", "/login");
+    cy.location("pathname").should("eq", "/login");
 
     // 檢查使用者名稱欄位是否顯示必填提示
     cy.get("#username:invalid")
@@ -33,10 +33,10 @@ describe("Login Page Test", () => {
     cy.get("#username").type(Math.random().toString(36).substring(7));
 
     // 再次點擊提交按鈕
-    cy.get("form").submit();
+    cy.get("form").find("button").click();
 
     // 驗證表單仍未被提交（URL應該保持不變）
-    cy.url().should("include", "/login");
+    cy.location("pathname").should("eq", "/login");
 
     // 檢查密碼欄位是否顯示必填提示
     cy.get("#password:invalid")
@@ -50,10 +50,10 @@ describe("Login Page Test", () => {
     cy.get("#password").type("錯誤密碼");
 
     // 提交表單
-    cy.get("form").submit();
+    cy.get("form").find("button").click();
 
     // 驗證URL沒有改變（未成功登錄）
-    cy.url().should("include", "/login");
+    cy.location("pathname").should("eq", "/login");
 
     // 檢查是否顯示錯誤消息
     cy.get("#msg-error").should("be.visible").and("contain", "登入失敗");
@@ -69,12 +69,12 @@ describe("Login Page Test", () => {
     cy.get("#password").type("test");
 
     // 提交表單
-    cy.get("form").submit();
+    cy.get("form").find("button").click();
 
     // 驗證URL已經改變（成功登錄後應該跳轉到其他頁面）
-    cy.url().should("not.include", "/login");
+    cy.location("pathname").should("not.include", "/login");
 
     // 檢查是否顯示歡迎消息或其他登錄成功的標誌
-    cy.url().should("include", "/calendar");
+    cy.location("pathname").should("eq", "/calendar");
   });
 });
