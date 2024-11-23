@@ -274,7 +274,7 @@ describe("Customer Page Test", () => {
           const hueWidth = $hue.width();
           const saturationWidth = $saturation.width();
           const saturationHeight = $saturation.height();
-          for (let index = 0; index < 0; index++) {
+          for (let index = 0; index < 10; index++) {
             cy.get("@hue").click(Math.random() * (hueWidth - 6), 0);
             cy.get("@saturation").click(
               Math.random() * (saturationWidth - 6),
@@ -335,6 +335,9 @@ describe("Customer Page Test", () => {
 
       cy.get("@productForm").contains("button", "建立產品").click();
 
+      // 驗證頁面是否跳轉到產品列表頁面
+      cy.location("pathname").should("eq", "/product");
+
       cy.get("@productList").find("table tbody tr").should("have.length", 6);
 
       cy.get("@productList")
@@ -368,5 +371,224 @@ describe("Customer Page Test", () => {
     });
   });
 
-  describe("modify product page", () => {});
+  describe("modify product page", () => {
+    beforeEach(() => {
+      cy.visit("/product/edit/6");
+      cy.get("main").contains("h1", "修改產品").parent().as("productForm");
+
+      cy.get("@productForm")
+        .contains("label", "產品代號")
+        .should("be.visible")
+        .next()
+        .find("input")
+        .as("companyId");
+
+      cy.get("@productForm")
+        .contains("label", "產品名稱")
+        .should("be.visible")
+        .next()
+        .find("input")
+        .as("productName");
+
+      cy.get("@productForm")
+        .contains("label", "產品簡稱")
+        .should("be.visible")
+        .next()
+        .find("input")
+        .as("shortName");
+
+      cy.get("@productForm")
+        .contains("label", "合約利率(月)")
+        .should("be.visible")
+        .next()
+        .find("input")
+        .as("interestRateMonthly");
+
+      cy.get("@productForm")
+        .contains("label", "合約週期(月)")
+        .should("be.visible")
+        .next()
+        .find("input")
+        .as("periodMonthly");
+
+      cy.get("@productForm")
+        .contains("label", "按鈕顯示顏色")
+        .should("be.visible")
+        .next()
+        .find("input")
+        .as("buttonColor");
+
+      cy.get("@productForm")
+        .contains("新合約預設產品")
+        .should("be.visible")
+        .prev()
+        .find('input[type="checkbox"]')
+        .as("defaultProduct");
+    });
+
+    it("should modify product page display correct product information", () => {
+      cy.get("@companyId").should("have.value", "TEST-006");
+      cy.get("@productName").should("have.value", "測試合約");
+      cy.get("@shortName").should("have.value", "測試");
+      cy.get("@interestRateMonthly").should("have.value", "15");
+      cy.get("@periodMonthly").should("have.value", "6");
+      cy.get("@buttonColor").should("have.value", "#ffe608");
+      cy.get("@defaultProduct").should("be.checked");
+    });
+
+    it("should validate modify product form", () => {
+      cy.get("@companyId").clear();
+      cy.get("@productName").clear();
+      cy.get("@shortName").clear();
+      // 送出表單
+      cy.get("@productForm").find("button").click();
+
+      // 驗證產品代號欄位有 required 提示
+      cy.get("@companyId")
+        .invoke("prop", "validationMessage")
+        .should("not.be.empty");
+
+      cy.get("@companyId").type("TEST-006");
+
+      // 再次送出表單
+      cy.get("@productForm").find("button").click();
+
+      // 驗證產品名稱欄位有 required 提示
+      cy.get("@productName")
+        .invoke("prop", "validationMessage")
+        .should("not.be.empty");
+
+      cy.get("@productName").type("測試合約");
+
+      // 再次送出表單
+      cy.get("@productForm").find("button").click();
+
+      // 驗證產品簡稱欄位有 required 提示
+      cy.get("@shortName")
+        .invoke("prop", "validationMessage")
+        .should("not.be.empty");
+
+      cy.get("@shortName").type("測試");
+
+      cy.get("@buttonColor").click();
+      cy.get("@buttonColor").next(".popover").should("be.visible");
+
+      cy.get("@buttonColor")
+        .next(".popover")
+        .find(".react-colorful__saturation")
+        .as("saturation");
+
+      cy.get("@buttonColor")
+        .next(".popover")
+        .find(".react-colorful__hue")
+        .as("hue");
+
+      cy.get("@saturation").then(($saturation) => {
+        cy.get("@hue").then(($hue) => {
+          const hueWidth = $hue.width();
+          const saturationWidth = $saturation.width();
+          const saturationHeight = $saturation.height();
+          for (let index = 0; index < 10; index++) {
+            cy.get("@hue").click(Math.random() * (hueWidth - 6), 0);
+            cy.get("@saturation").click(
+              Math.random() * (saturationWidth - 6),
+              Math.random() * (saturationHeight - 6)
+            );
+            cy.get("@buttonColor")
+              .should("have.attr", "value")
+              .and("match", /^#[0-9A-F]{6}$/i);
+          }
+
+          cy.get("@hue").click(hueWidth * 0.15, 0);
+          cy.get("@saturation").click(saturationWidth - 6, 0);
+        });
+      });
+
+      cy.get("main").click();
+
+      cy.get("@defaultProduct").parent().click();
+      cy.get("@defaultProduct").should("not.be.checked");
+
+      cy.get("@defaultProduct").parent().click();
+      cy.get("@defaultProduct").should("be.checked");
+    });
+
+    it("should modify product successfully", () => {
+      cy.get("@companyId").clear().type("TEST-006-2");
+      cy.get("@productName").clear().type("測試合約2");
+      cy.get("@shortName").clear().type("測2");
+
+      cy.get("@buttonColor").click();
+
+      cy.get("@buttonColor")
+        .next(".popover")
+        .find(".react-colorful__saturation")
+        .as("saturation");
+
+      cy.get("@buttonColor")
+        .next(".popover")
+        .find(".react-colorful__hue")
+        .as("hue");
+
+      cy.get("@saturation").then(($saturation) => {
+        cy.get("@hue").then(($hue) => {
+          const hueWidth = $hue.width();
+          const saturationWidth = $saturation.width();
+
+          cy.get("@hue").click(hueWidth * 0.5, 0);
+          cy.get("@saturation").click(saturationWidth - 6, 0);
+        });
+      });
+
+      cy.get("main").click();
+
+      cy.get("@buttonColor").should("have.value", "#08ffff");
+
+      cy.get("@defaultProduct").parent().click();
+      cy.get("@defaultProduct").should("not.be.checked");
+
+      cy.get("@productForm").contains("button", "修改產品").click();
+
+      // 驗證頁面是否跳轉到產品列表頁面
+      cy.location("pathname").should("eq", "/product");
+
+      cy.get("main")
+        .contains("h1", "產品列表")
+        .should("be.visible")
+        .parent()
+        .parent()
+        .as("productList");
+
+      cy.get("@productList").find("table tbody tr").should("have.length", 6);
+
+      cy.get("@productList")
+        .find("table tbody tr")
+        .first()
+        .within(() => {
+          // 檢查代號
+          cy.get("td").eq(0).invoke("text").should("eq", "TEST-006-2");
+
+          // 檢查名稱
+          cy.get("td").eq(1).invoke("text").should("eq", "測試合約2");
+
+          // 檢查簡稱
+          cy.get("td").eq(2).invoke("text").should("eq", "測2");
+
+          // 檢查利率(月)
+          cy.get("td").eq(3).invoke("text").should("eq", "15%");
+
+          // 檢查周期
+          cy.get("td").eq(4).invoke("text").should("eq", "6");
+
+          // 檢查顏色
+          cy.get("td")
+            .eq(5)
+            .find("div")
+            .should("have.attr", "style")
+            .and("include", "background-color: rgb(8, 255, 255)");
+          // 檢查預設
+          cy.get("td").eq(6).invoke("text").should("eq", "");
+        });
+    });
+  });
 });
