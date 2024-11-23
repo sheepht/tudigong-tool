@@ -65,7 +65,7 @@ describe("Customer Page Test", () => {
 
       cy.get("@productList").find("input").as("searchInput");
     });
-    it("should display product page", () => {
+    it("should display product page url", () => {
       cy.location("pathname").should("eq", "/product");
     });
 
