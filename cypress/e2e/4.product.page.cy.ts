@@ -11,7 +11,7 @@ describe("Customer Page Test", () => {
   });
 
   it("should display product page", () => {
-    cy.url().should("include", "/product");
+    cy.location("pathname").should("eq", "/product");
   });
 
   it("should display create contract, create customer, create product text", () => {
