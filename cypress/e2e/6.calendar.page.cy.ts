@@ -379,4 +379,46 @@ describe("Calendar Page Test", () => {
         });
     });
   });
+
+  describe("calendar note", () => {
+    beforeEach(() => {
+      cy.visit("/calendar?month=2024/01");
+      cy.contains("本月").parent().parent().as("header");
+      cy.get("@header").children().eq(3).should("be.visible").as("note");
+      cy.get("@note").click();
+      cy.get("#root").children().eq(1).as("noteModalBG");
+
+      cy.get("@noteModalBG").children().first().as("noteModal");
+    });
+    it("should validate note layout", () => {
+      cy.get("@noteModal").contains("本月備註").should("be.visible");
+      cy.get("@noteModal")
+        .find("textarea")
+        .should("have.value", "這是一月的備註");
+      cy.get("@noteModal").contains("取消").should("be.visible");
+      cy.get("@noteModal").contains("更新").should("be.visible");
+    });
+
+    it("should validate note should by month", () => {
+      cy.contains("»").click({ force: true });
+      cy.get("@note").click();
+      cy.get("@noteModal")
+        .find("textarea")
+        .should("have.value", "這是二月的備註 打很長哈哈哈哈哈哈");
+    });
+
+    it("should validate note update", () => {
+      const ts = Date.now();
+      cy.contains("»").click({ force: true });
+      cy.contains("»").click({ force: true });
+      cy.contains("»").click({ force: true });
+      cy.get("@note").should("be.visible").click();
+      cy.get("@noteModal")
+        .find("textarea")
+        .clear()
+        .type(`這是四月的備註 ${ts}`);
+      cy.get("@noteModal").contains("更新").click();
+      cy.get("@note").should("have.text", ` 這是四月的備註 ${ts}`);
+    });
+  });
 });
