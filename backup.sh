@@ -12,7 +12,8 @@ cd $HOME/web/$ENV
 FILE_PATH="${BACKUP_PATH}/database.sql" # 修改為你要備份的檔案路徑
 
 # 備份資料庫
-env $(cat .env .env.service | xargs) docker compose exec $ENV-db mysqldump -uroot -p$MYSQL_ROOT_PASSWORD $MYSQL_DATABASE > $FILE_PATH
+env $(cat .env .env.service | xargs) docker compose exec $ENV-db mysqldump -uroot -p$MYSQL_ROOT_PASSWORD user_1 > $FILE_PATH
+# env $(cat .env .env.service | xargs) docker compose exec $ENV-db mysqldump -uroot -p$MYSQL_ROOT_PASSWORD $MYSQL_DATABASE > $FILE_PATH
 
 # 設定 Slack 的參數
 SLACK_CHANNEL_ID="${SLACK_CHANNEL_ID}" # 修改為你要上傳檔案的 Slack 頻道 ID
