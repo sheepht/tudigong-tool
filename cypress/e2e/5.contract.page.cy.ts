@@ -179,7 +179,7 @@ describe("Contract Page Test", () => {
     }
   });
 
-  it.only("should create contract", () => {
+  it("should create contract", () => {
     // 輸入主合約的內容
     cy.get("@contractForm").find("#product_id").select("1");
     cy.get("@contractForm").find("#start_date").type("2024-01-01");
@@ -277,9 +277,72 @@ describe("Contract Page Test", () => {
       .should("not.exist");
     cy.get("@contractForm")
       .contains("button", "建立合約")
-      .should("not.be.disabled");
+      .should("not.be.disabled")
+      .click();
+
+    cy.contains("合約建立成功").should("be.visible");
   });
 
-  // TODO: 因為會改到資料庫，所以稍後處理
-  it("should modify contract status");
+  it("should validate created contract", () => {
+    const firstColor = "rgb(37, 99, 235)";
+    const otherColor = "rgb(107, 114, 128)";
+
+    for (let i = 1; i <= 7; i++) {
+      const typeText = i === 1 ? "新合約" : "走期約";
+      cy.visit(`/calendar-detail?date=2024/0${i}/01`);
+      cy.contains(`${i}月1號`).should("be.visible");
+      cy.contains(typeText).should("be.visible");
+      cy.contains(typeText)
+        .next()
+        .children()
+        .eq(0)
+        .each(($el) => {
+          cy.wrap($el).children().eq(0).should("have.text", "10");
+          cy.wrap($el)
+            .children()
+            .eq(1)
+            .should("have.text", `一般${i - 1}`);
+          cy.wrap($el)
+            .children()
+            .eq(2)
+            .should("have.text", "修")
+            .should("have.attr", "href")
+            .and("match", /^\/contract\/edit\/\d+\/\d+$/);
+          cy.wrap($el)
+            .children()
+            .eq(3)
+            .should("have.text", "續")
+            .and(($el) => {
+              if (i === 7) {
+                expect($el).to.have.prop("tagName", "A");
+                expect($el)
+                  .to.have.attr("href")
+                  .match(/^\/contract\/renew\/\d+\/\d+$/);
+              } else {
+                expect($el).to.have.prop("tagName", "SPAN");
+              }
+            });
+          cy.wrap($el)
+            .children()
+            .eq(4)
+            .should(
+              "have.text",
+              "480東南西北360告五人240蒟蒻120洪克林bla bla bla"
+            );
+          cy.wrap($el)
+            .children()
+            .eq(4)
+            .children()
+            .eq(0)
+            .should("have.css", "color", i === 1 ? firstColor : otherColor);
+        });
+      if (i === 1) {
+        cy.contains(typeText).next().next().should("have.text", "10");
+      }
+    }
+  });
+
+  it.skip("should modify contract", () => {});
+
+  it.skip("should renew contract", () => {});
 });
