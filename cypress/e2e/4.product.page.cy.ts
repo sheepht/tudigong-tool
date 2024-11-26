@@ -330,6 +330,17 @@ describe("Customer Page Test", () => {
 
       cy.get("main").click();
 
+      let buttonColorValue;
+      cy.get("@buttonColor")
+        .invoke("val")
+        .then((value: string) => {
+          buttonColorValue = value
+            .replace("#", "")
+            .match(/.{2}/g)
+            .map((x) => parseInt(x, 16));
+          buttonColorValue = `rgb(${buttonColorValue[0]}, ${buttonColorValue[1]}, ${buttonColorValue[2]})`;
+        });
+
       cy.get("@defaultProduct").parent().click();
       cy.get("@defaultProduct").should("be.checked");
 
@@ -364,7 +375,7 @@ describe("Customer Page Test", () => {
             .eq(5)
             .find("div")
             .should("have.attr", "style")
-            .and("include", "background-color: rgb(255, 230, 8)");
+            .and("include", `background-color: ${buttonColorValue}`);
           // 檢查預設
           cy.get("td").eq(6).invoke("text").should("eq", "v");
         });
