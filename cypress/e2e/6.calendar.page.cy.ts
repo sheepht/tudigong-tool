@@ -190,7 +190,7 @@ describe("Calendar Page Test", () => {
       cy.location("search").should("eq", "?month=2024%2F01");
 
       cy.get("@note").should("have.text", " 這是一月的備註");
-      cy.get("@summary").should("have.text", "續 0新 360加 0回 0移 0共 360");
+      cy.get("@summary").should("have.text", "續 0新 370加 0回 0移 0共 370");
 
       cy.get("@dateMenu").contains("»").click();
       cy.get("@dateMenu").contains("»").click();
