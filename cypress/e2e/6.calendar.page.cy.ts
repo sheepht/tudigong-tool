@@ -400,7 +400,12 @@ describe("Calendar Page Test", () => {
     });
 
     it("should validate note should by month", () => {
+      cy.get("@noteModalBG").click({ force: true });
+      cy.get("@noteModalBG").should("not.exist");
       cy.contains("»").click({ force: true });
+
+      cy.wait(1000);
+
       cy.get("@note").click();
       cy.get("@noteModal")
         .find("textarea")
