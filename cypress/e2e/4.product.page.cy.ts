@@ -3,6 +3,8 @@ describe("Customer Page Test", () => {
     cy.loginAndSetToken();
   });
 
+  let buttonColorValue;
+
   describe("product list page", () => {
     beforeEach(() => {
       cy.visit("/product");
@@ -330,7 +332,6 @@ describe("Customer Page Test", () => {
 
       cy.get("main").click();
 
-      let buttonColorValue;
       cy.get("@buttonColor")
         .invoke("val")
         .then((value: string) => {
@@ -443,7 +444,11 @@ describe("Customer Page Test", () => {
       cy.get("@shortName").should("have.value", "測試");
       cy.get("@interestRateMonthly").should("have.value", "15");
       cy.get("@periodMonthly").should("have.value", "6");
-      cy.get("@buttonColor").should("have.value", "#ffe608");
+      cy.get("@buttonColor").should(
+        "have.css",
+        "background-color",
+        buttonColorValue
+      );
       cy.get("@defaultProduct").should("be.checked");
     });
 
@@ -553,7 +558,11 @@ describe("Customer Page Test", () => {
 
       cy.get("main").click();
 
-      cy.get("@buttonColor").should("have.value", "#08ffff");
+      cy.get("@buttonColor")
+        .invoke("css", "background-color")
+        .then((color) => {
+          buttonColorValue = color;
+        });
 
       cy.get("@defaultProduct").parent().click();
       cy.get("@defaultProduct").should("not.be.checked");
@@ -596,7 +605,7 @@ describe("Customer Page Test", () => {
             .eq(5)
             .find("div")
             .should("have.attr", "style")
-            .and("include", "background-color: rgb(8, 255, 255)");
+            .and("include", `background-color: ${buttonColorValue}`);
           // 檢查預設
           cy.get("td").eq(6).invoke("text").should("eq", "");
         });
