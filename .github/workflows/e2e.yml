@@ -27,7 +27,7 @@ jobs:
       - name: checkout tudigong-service repo
         uses: actions/checkout@v4
         with:
-          repository: tu-di-gong/tudigong-service
+          repository: sheepht/tudigong-service
           path: tudigong-service
           ref: dev
           token: ${{ secrets.ORG_PAT }}
@@ -69,7 +69,7 @@ jobs:
       - name: checkout web repo
         uses: actions/checkout@v4
         with:
-          repository: tu-di-gong/tudigong-web
+          repository: sheepht/tudigong-web
           path: tudigong-web
           ref: dev
           token: ${{ secrets.ORG_PAT }}
