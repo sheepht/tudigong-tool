@@ -39,8 +39,8 @@ Cypress.Commands.add("loginAndSetToken", () => {
   }).then((response) => {
     expect(response.status).to.eq(200);
 
-    expect(response.body).to.have.property("token");
-    localStorage.setItem("token", response.body.token);
+    expect(response.body).to.have.property("access_token");
+    localStorage.setItem("token", response.body.access_token);
   });
 });
 

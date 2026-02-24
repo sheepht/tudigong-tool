@@ -55,10 +55,12 @@ describe("Contract Page Test", () => {
         .should("be.visible")
         .next("select#product_id")
         .should("exist")
-        .and("have.value", "6")
+        .and("have.value", "8")
         .within(() => {
-          cy.get("option").should("have.length", 6);
-          cy.get("option[value='6']").should("contain", "測試合約");
+          cy.get("option").should("have.length", 8);
+          cy.get("option[value='8']").should("contain", "測試合約");
+          cy.get("option[value='7']").should("contain", "新年約");
+          cy.get("option[value='6']").should("contain", "新半年約");
           cy.get("option[value='5']").should("contain", "短期超特殊合約");
           cy.get("option[value='4']").should("contain", "特殊半年約");
           cy.get("option[value='3']").should("contain", "短期特殊合約");
@@ -210,7 +212,7 @@ describe("Contract Page Test", () => {
     it("should create contract", () => {
       // 輸入主合約的內容
       cy.get("@contractForm").find("#product_id").select("1");
-      cy.get("@contractForm").find("#start_date").type("2024-01-01");
+      cy.get("@contractForm").find("#start_date").type("2024-01-07");
       cy.get("@contractForm")
         .contains("label", "客戶姓名")
         .next()
@@ -321,8 +323,8 @@ describe("Contract Page Test", () => {
 
       for (let i = 1; i <= 7; i++) {
         const typeText = i === 1 ? "新合約" : "走期約";
-        cy.visit(`/calendar-detail?date=2024/0${i}/01`);
-        cy.contains(`${i}月1號`).should("be.visible");
+        cy.visit(`/calendar-detail?date=2024/0${i}/07`);
+        cy.contains(`${i}月7號`).should("be.visible");
         cy.contains(typeText).should("be.visible");
         cy.contains(typeText)
           .next()
@@ -369,7 +371,7 @@ describe("Contract Page Test", () => {
               .should("have.css", "color", i === 1 ? firstColor : otherColor);
           });
         if (i === 1) {
-          cy.contains(typeText).next().next().should("have.text", "10");
+          cy.contains(typeText).next().next().should("have.text", "40");
         }
       }
     });
@@ -377,17 +379,17 @@ describe("Contract Page Test", () => {
 
   describe("Modify contract", () => {
     it("should check only 0 period can be deleted", () => {
-      cy.visit("/contract/edit/21/0");
+      cy.visit("/contract/edit/25/0");
       cy.contains("button", "刪除合約").scrollIntoView().should("be.visible");
 
       for (let i = 1; i <= 6; i++) {
-        cy.visit(`/contract/edit/21/${i}`);
+        cy.visit(`/contract/edit/25/${i}`);
         cy.contains("button", "刪除合約").should("not.exist");
       }
     });
 
     it("should modify contract", () => {
-      cy.visit("/contract/edit/21/0");
+      cy.visit("/contract/edit/25/0");
       cy.get("main").contains("h1", "主合約內容").parent().as("contractForm");
       cy.get("main")
         .contains("h1", "合約金額分配")
@@ -461,7 +463,7 @@ describe("Contract Page Test", () => {
       cy.contains("合約修改成功").should("be.visible");
 
       cy.location("pathname").should("eq", "/calendar-detail");
-      cy.location("search").should("eq", "?date=2024/01/01");
+      cy.location("search").should("eq", "?date=2024/01/07");
     });
 
     it("should validate modified contract", () => {
@@ -470,8 +472,8 @@ describe("Contract Page Test", () => {
 
       for (let i = 1; i <= 7; i++) {
         const typeText = i === 1 ? "新合約" : "走期約";
-        cy.visit(`/calendar-detail?date=2024/0${i}/01`);
-        cy.contains(`${i}月1號`).should("be.visible");
+        cy.visit(`/calendar-detail?date=2024/0${i}/07`);
+        cy.contains(`${i}月7號`).should("be.visible");
         cy.contains(typeText).should("be.visible");
         cy.contains(typeText)
           .next()
@@ -518,7 +520,7 @@ describe("Contract Page Test", () => {
               .should("have.css", "color", i === 1 ? firstColor : otherColor);
           });
         if (i === 1) {
-          cy.contains(typeText).next().next().should("have.text", "10");
+          cy.contains(typeText).next().next().should("have.text", "40");
         }
       }
     });
@@ -526,7 +528,7 @@ describe("Contract Page Test", () => {
 
   describe("Renew contract", () => {
     it("should renew contract", () => {
-      cy.visit("/contract/renew/21/6");
+      cy.visit("/contract/renew/25/6");
       cy.get("main")
         .contains("h1", "合約金額分配")
         .parent()
@@ -542,7 +544,7 @@ describe("Contract Page Test", () => {
       cy.get("@contractForm").find("#total_amount").clear().type("300000");
       cy.get("@contractForm")
         .find("#scheduled_date")
-        .should("have.value", "2024-07-03");
+        .should("have.value", "2024-07-07");
 
       validateField({
         dom: "@contractForm",
@@ -641,19 +643,19 @@ describe("Contract Page Test", () => {
       cy.contains("合約續約成功").should("be.visible");
 
       cy.location("pathname").should("eq", "/calendar-detail");
-      cy.location("search").should("eq", "?date=2024/07/03");
+      cy.location("search").should("eq", "?date=2024/07/07");
     });
 
     it("should validate renewed contract", () => {
-      cy.visit("/calendar-detail?date=2024/07/03");
+      cy.visit("/calendar-detail?date=2024/07/07");
 
       const firstColor = "rgb(22, 163, 74)";
       const otherColor = "rgb(107, 114, 128)";
 
       for (let i = 7; i <= 9; i++) {
         const typeText = i === 7 ? "新合約" : "走期約";
-        cy.visit(`/calendar-detail?date=2024/0${i}/03`);
-        cy.contains(`${i}月3號`).should("be.visible");
+        cy.visit(`/calendar-detail?date=2024/0${i}/07`);
+        cy.contains(`${i}月7號`).should("be.visible");
         cy.contains(typeText).should("be.visible");
         cy.contains(typeText)
           .next()

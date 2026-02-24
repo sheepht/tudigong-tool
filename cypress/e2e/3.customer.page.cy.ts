@@ -3,6 +3,8 @@ describe("Customer Page Test", () => {
     cy.loginAndSetToken();
   });
 
+  let newCustomerEditUrl: string;
+
   describe("customer list page", () => {
     beforeEach(() => {
       cy.visit("/customer");
@@ -27,6 +29,11 @@ describe("Customer Page Test", () => {
         .next()
         .find("input")
         .as("customerIdInput");
+      cy.get("@customerForm")
+        .contains("label", "銀行")
+        .next()
+        .find("select")
+        .as("bankSelect");
     });
 
     it("should display customer page", () => {
@@ -45,6 +52,7 @@ describe("Customer Page Test", () => {
       cy.get("@customerIdInput")
         .should("exist")
         .and("have.attr", "placeholder", "A12345");
+      cy.get("@bankSelect").should("exist");
       cy.get("main").contains("button", "建立客戶").should("exist");
     });
 
@@ -88,7 +96,7 @@ describe("Customer Page Test", () => {
           // 檢查每一列是否有文字
           cy.wrap($li)
             .invoke("text")
-            .should("match", /^.+ \(.+\)$/);
+            .should("match", /^.+ \(.+\) - .+$/);
 
           // 檢查每一列是否有超連結，並且href屬性符合預期格式
           cy.wrap($li)
@@ -172,23 +180,32 @@ describe("Customer Page Test", () => {
     it("should create customer successfully", () => {
       cy.get("@customerNameInput").type("王大明");
       cy.get("@customerIdInput").type("A12345");
+      cy.get("@bankSelect").select("14");
       cy.get("@customerForm").find("button").click();
 
       cy.location("pathname").should("eq", "/customer");
-
-      cy.get("@customerList").find("ul li").should("have.length", 7);
 
       // 驗證第1列的客戶姓名和身份證前六碼是否正確
       cy.get("@customerList")
         .find("ul li")
         .first()
-        .should("contain", "王大明 (A12345)");
+        .should("contain", "王大明 (A12345) - 現金");
+
+      // 儲存新客戶的編輯連結
+      cy.get("@customerList")
+        .find("ul li")
+        .first()
+        .find("a")
+        .invoke("attr", "href")
+        .then((href) => {
+          newCustomerEditUrl = href;
+        });
     });
   });
 
   describe("modify customer page", () => {
     beforeEach(() => {
-      cy.visit("/customer/edit/7");
+      cy.visit(newCustomerEditUrl);
       cy.get("main")
         .contains("h1", "修改客戶")
         .parent()
@@ -205,11 +222,17 @@ describe("Customer Page Test", () => {
         .next()
         .find("input")
         .as("customerIdInput");
+      cy.get("@customerForm")
+        .contains("label", "銀行")
+        .next()
+        .find("select")
+        .as("bankSelect");
     });
 
     it("should modify customer page display correct customer information", () => {
       cy.get("@customerNameInput").should("have.value", "王大明");
       cy.get("@customerIdInput").should("have.value", "A12345");
+      cy.get("@bankSelect").should("have.value", "14");
     });
 
     it("should validate modify customer form", () => {
@@ -267,13 +290,11 @@ describe("Customer Page Test", () => {
         .parent()
         .as("customerList");
 
-      cy.get("@customerList").find("ul li").should("have.length", 7);
-
       // 驗證第1列的客戶姓名和身份證前六碼是否正確
       cy.get("@customerList")
         .find("ul li")
         .first()
-        .should("contain", "王大明2 (A23456)");
+        .should("contain", "王大明2 (A23456) - 現金");
     });
   });
 });
