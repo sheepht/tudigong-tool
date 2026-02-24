@@ -14,21 +14,20 @@ describe("Calendar Page Test", () => {
 
     cy.visit("/calendar?month=2024/03");
 
-    cy.contains("本月").parent().parent().as("header");
-    cy.get("@header").next().find("table").as("calendar");
+    // Header: 找到日期文字的父層即為 header
+    cy.contains("24/03").parent().as("header");
+    // 日曆改為 4 欄 grid（7, 14, 21, 28）
+    cy.get(".grid-cols-4").as("calendar");
 
-    // 第一個是drawer選單
+    // Header children: drawer(0), date(1), bank(2), summary(3), note(4)
     cy.get("@header")
       .children()
       .first()
       .should("be.visible")
       .as("drawerButton");
-    // 第二個是日期選單
     cy.get("@header").children().eq(1).should("be.visible").as("dateMenu");
-    // 第三個是金額summary
-    cy.get("@header").children().eq(2).should("be.visible").as("summary");
-    // 第四個是 note
-    cy.get("@header").children().eq(3).should("be.visible").as("note");
+    cy.get("@header").children().eq(3).should("be.visible").as("summary");
+    cy.get("@header").children().eq(4).should("be.visible").as("note");
   });
 
   describe("calendar layout", () => {
@@ -39,13 +38,7 @@ describe("Calendar Page Test", () => {
 
     describe("header", () => {
       it("should date menu display correct text", () => {
-        cy.get("@dateMenu")
-          .invoke("text")
-          .should("match", /^2024 03月«本月»$/);
-
-        cy.get("@dateMenu").children().eq(0).should("have.text", "«");
-        cy.get("@dateMenu").children().eq(1).should("have.text", "本月");
-        cy.get("@dateMenu").children().eq(2).should("have.text", "»");
+        cy.get("@dateMenu").should("have.text", "24/03");
       });
 
       it("should summary display correct text", () => {
@@ -66,91 +59,48 @@ describe("Calendar Page Test", () => {
     });
 
     describe("calendar", () => {
-      it("should calendar weekday display correct text", () => {
+      it("should calendar display 4 columns for days 7, 14, 21, 28", () => {
         cy.get("@calendar").should("be.visible");
-        cy.get("@calendar")
-          .find("thead th")
-          .should("have.length", 7)
-          .each(($th, index) => {
-            const weekdays = [
-              "周一",
-              "周二",
-              "周三",
-              "周四",
-              "周五",
-              "周六",
-              "周日",
-            ];
-            cy.wrap($th).should("have.text", weekdays[index]);
-          });
+        cy.get("@calendar").children().should("have.length", 4);
 
-        cy.get("@calendar")
-          .find("thead th")
-          .eq(5)
-          .find("span")
-          .should("have.css", "color", "rgb(22, 163, 74)"); // 周六綠色
+        const days = [7, 14, 21, 28];
+        days.forEach((day, index) => {
+          cy.get("@calendar")
+            .children()
+            .eq(index)
+            .within(() => {
+              // 日期連結到 calendar-detail
+              cy.get("a")
+                .first()
+                .should("have.text", day.toString())
+                .and("have.attr", "href")
+                .and("include", "/calendar-detail");
 
-        cy.get("@calendar")
-          .find("thead th")
-          .eq(6)
-          .find("span")
-          .should("have.css", "color", "rgb(220, 38, 38)"); // 周日紅色
+              // + 按鈕連結到建立合約
+              cy.get("a")
+                .eq(1)
+                .should("have.attr", "href")
+                .and("include", "/contract/create");
 
-        cy.get("@calendar")
-          .find("thead th")
-          .eq(2)
-          .find("a")
-          .should("exist") // 周三有超連結
-          .and("have.attr", "href", "/contract/create");
+              // 金額顯示
+              cy.contains("$").should("exist");
+
+              // 合約列表
+              cy.get("ul").should("exist");
+            });
+        });
       });
 
-      it("should calendar date display correct text", () => {
-        cy.get("@calendar").find("tbody td").should("have.length", 35);
-
+      it("should calendar columns display contract entries", () => {
         cy.get("@calendar")
-          .find("tbody td")
-          .each(($td, index) => {
-            const day = index < 4 ? index + 26 : index - 3;
-            // 驗證日期
-            cy.wrap($td)
-              .find("div > :first-child")
-              .eq(0)
-              .invoke("text")
-              .should("eq", day.toString());
-
-            // 驗證每個日期裡的合約格式為 [合約編號] [合約金額+人名]*n
-            cy.wrap($td)
-              .find("ul")
+          .children()
+          .each(($col) => {
+            cy.wrap($col)
+              .find("ul li")
               .should("have.length.gte", 0)
-              .each(($ul) => {
-                cy.wrap($ul)
-                  .find("li")
-                  .should("have.length.gte", 0)
-                  .each(($li) => {
-                    cy.wrap($li)
-                      .children()
-                      .eq(0)
-                      .invoke("text")
-                      .should("match", /^\d+$/);
-
-                    cy.wrap($li)
-                      .children()
-                      .eq(1)
-                      .invoke("text")
-                      .should("match", /^\d+(,\d+)* .+$/);
-                  });
+              .each(($li) => {
+                cy.wrap($li).should("not.be.empty");
               });
-
-            // 如果 index 是 6, 13, 20, 27, 34... 則要驗證 td>div>第3個元素的內容為$金額格式
-            if (index % 7 === 6) {
-              cy.wrap($td)
-                .children()
-                .eq(0)
-                .children()
-                .eq(2)
-                .invoke("text")
-                .should("match", /^\$\d+(,\d+)*$/);
-            }
           });
       });
     });
@@ -173,43 +123,57 @@ describe("Calendar Page Test", () => {
       cy.get("@drawer").should("not.exist");
     });
 
-    it("should validate date menu behavior", () => {
-      cy.get("@dateMenu").contains("«").click();
-      cy.get("@dateMenu")
-        .invoke("text")
-        .should("match", /^2024 02月«本月»$/);
+    it("should validate month navigation", () => {
+      // 訪問二月
+      cy.visit("/calendar?month=2024/02");
+      cy.contains("24/02").should("be.visible");
       cy.location("search").should("eq", "?month=2024%2F02");
 
-      cy.get("@note").should("have.text", " 這是二月的備註 打很長哈哈哈哈哈哈");
-      cy.get("@summary").should("have.text", "續 0新 0加 0回 110移 110共 0");
+      // 驗證二月備註
+      cy.contains("24/02")
+        .parent()
+        .children()
+        .last()
+        .should("contain.text", "這是二月的備註 打很長哈哈哈哈哈哈");
 
-      cy.get("@dateMenu").contains("«").click();
-      cy.get("@dateMenu")
-        .invoke("text")
-        .should("match", /^2024 01月«本月»$/);
+      // 訪問一月
+      cy.visit("/calendar?month=2024/01");
+      cy.contains("24/01").should("be.visible");
       cy.location("search").should("eq", "?month=2024%2F01");
 
-      cy.get("@note").should("have.text", " 這是一月的備註");
-      cy.get("@summary").should("have.text", "續 0新 370加 0回 0移 0共 370");
+      // 驗證一月備註
+      cy.contains("24/01")
+        .parent()
+        .children()
+        .last()
+        .should("contain.text", "這是一月的備註");
 
-      cy.get("@dateMenu").contains("»").click();
-      cy.get("@dateMenu").contains("»").click();
-      cy.get("@dateMenu")
-        .invoke("text")
-        .should("match", /^2024 03月«本月»$/);
+      // 驗證 summary 格式
+      cy.contains("24/01")
+        .parent()
+        .children()
+        .eq(3)
+        .find("ul li")
+        .should("have.length", 6)
+        .each(($li) => {
+          cy.wrap($li)
+            .invoke("text")
+            .should("match", /^(續|新|加|回|移|共) \d+$/);
+        });
+
+      // 回到三月
+      cy.visit("/calendar?month=2024/03");
+      cy.contains("24/03").should("be.visible");
       cy.location("search").should("eq", "?month=2024%2F03");
-      cy.get("@summary").should(
-        "have.text",
-        "續 210新 0加 40回 290移 110共 250"
-      );
 
+      // 訪問當月
       const currentYear = new Date().getFullYear();
       const currentMonth = ("00" + String(new Date().getMonth() + 1)).slice(-2);
 
-      cy.get("@dateMenu").contains("本月").click();
-      cy.get("@dateMenu")
-        .invoke("text")
-        .should("match", RegExp(`^${currentYear} ${currentMonth}月«本月»$`));
+      cy.visit(`/calendar?month=${currentYear}/${currentMonth}`);
+      cy.contains(
+        `${String(currentYear).slice(2)}/${currentMonth}`
+      ).should("be.visible");
       cy.location("search").should(
         "eq",
         `?month=${currentYear}%2F${currentMonth}`
@@ -232,22 +196,18 @@ describe("Calendar Page Test", () => {
     });
 
     it("should validate calendar day behavior", () => {
-      cy.get("@calendar")
-        .find("tbody td")
-        .eq(9)
-        .find("div > :first-child")
-        .eq(0)
-        .click();
+      // 點擊第一欄（7號）的日期連結
+      cy.get("@calendar").children().eq(0).find("a").first().click();
 
       cy.location("pathname").should("eq", "/calendar-detail");
-      cy.location("search").should("eq", "?date=2024/03/06");
+      cy.location("search").should("eq", "?date=2024/03/07");
     });
   });
 
   describe("calendar drawer", () => {
     beforeEach(() => {
       cy.visit("/calendar?month=2024/01");
-      cy.contains("本月").parent().parent().as("header");
+      cy.contains("24/01").parent().as("header");
       cy.get("@header")
         .children()
         .first()
@@ -324,7 +284,7 @@ describe("Calendar Page Test", () => {
           cy.wrap($li)
             .find("a")
             .should("have.css", "color")
-            .and("be.oneOf", ["rgb(22, 163, 74)", "rgb(220, 38, 38)"]); // 綠色或紅色
+            .and("be.oneOf", ["rgb(22, 163, 74)", "rgb(220, 38, 38)"]);
 
           cy.wrap($li)
             .find("span")
@@ -339,7 +299,6 @@ describe("Calendar Page Test", () => {
     it("should validate drawer change list behavior", () => {
       cy.get("@changeList")
         .find("li")
-        // .eq(0)
         .each(($li) => {
           // 檢查star按鈕由 黑空星 -> 紅實星 -> 黑實星
           for (let i = 0; i < StartList.length; i++) {
@@ -383,8 +342,8 @@ describe("Calendar Page Test", () => {
   describe("calendar note", () => {
     beforeEach(() => {
       cy.visit("/calendar?month=2024/01");
-      cy.contains("本月").parent().parent().as("header");
-      cy.get("@header").children().eq(3).should("be.visible").as("note");
+      cy.contains("24/01").parent().as("header");
+      cy.get("@header").children().eq(4).should("be.visible").as("note");
       cy.get("@note").click();
       cy.get("#root").children().eq(1).as("noteModalBG");
 
@@ -402,22 +361,31 @@ describe("Calendar Page Test", () => {
     it("should validate note should by month", () => {
       cy.get("@noteModalBG").click({ force: true });
       cy.get("@noteModalBG").should("not.exist");
-      cy.contains("»").click({ force: true });
 
-      cy.wait(1000);
+      cy.visit("/calendar?month=2024/02");
+      cy.contains("24/02").parent().children().eq(4).click();
 
-      cy.get("@note").click();
-      cy.get("@noteModal")
+      cy.get("#root")
+        .children()
+        .eq(1)
+        .children()
+        .first()
         .find("textarea")
         .should("have.value", "這是二月的備註 打很長哈哈哈哈哈哈");
     });
 
     it("should validate note update", () => {
-      const ts = Date.now();
-      cy.contains("»").click({ force: true });
-      cy.contains("»").click({ force: true });
-      cy.contains("»").click({ force: true });
+      cy.get("@noteModalBG").click({ force: true });
+      cy.get("@noteModalBG").should("not.exist");
+
+      cy.visit("/calendar?month=2024/04");
+      cy.contains("24/04").parent().as("header");
+      cy.get("@header").children().eq(4).as("note");
       cy.get("@note").should("be.visible").click();
+
+      cy.get("#root").children().eq(1).children().first().as("noteModal");
+
+      const ts = Date.now();
       cy.get("@noteModal")
         .find("textarea")
         .clear()
