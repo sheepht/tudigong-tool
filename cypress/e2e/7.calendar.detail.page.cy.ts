@@ -5,10 +5,10 @@ describe("Calendar Detail Page Test", () => {
 
   describe("calendar detail layout", () => {
     it("should validate calendar detail page all new contract", () => {
-      cy.visit("/calendar-detail?date=2024/01/31");
+      cy.visit("/calendar-detail?date=2024/01/28");
       cy.contains("新合約").next().as("contractList");
 
-      cy.contains("1月31號週三").should("be.visible");
+      cy.contains("1月28號週日").should("be.visible");
       cy.contains("新合約").should("be.visible");
       cy.contains("回日曆").should("be.visible");
 
@@ -61,10 +61,10 @@ describe("Calendar Detail Page Test", () => {
     });
 
     it("should validate calendar detail page all renew contract", () => {
-      cy.visit("/calendar-detail?date=2024/03/06");
+      cy.visit("/calendar-detail?date=2024/04/07");
       cy.contains("新合約").next().as("contractList");
 
-      cy.contains("3月6號週三").should("be.visible");
+      cy.contains("4月7號週日").should("be.visible");
       cy.contains("新合約").should("be.visible");
       cy.contains("回日曆").should("be.visible");
 
@@ -117,10 +117,10 @@ describe("Calendar Detail Page Test", () => {
     });
 
     it("should validate calendar detail page all end contract", () => {
-      cy.visit("/calendar-detail?date=2024/09/06");
+      cy.visit("/calendar-detail?date=2024/10/07");
       cy.contains("走期約").next().as("contractList");
 
-      cy.contains("9月6號週五").should("be.visible");
+      cy.contains("10月7號週一").should("be.visible");
       cy.contains("走期約").should("be.visible");
       cy.contains("回日曆").should("be.visible");
 
